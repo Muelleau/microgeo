@@ -1,30 +1,13 @@
 
-#ifndef pointgroup_H
-#define pointgroup_H
-
 
 #include <vector>
 #include <map>
 #include <string>
+#include "../point/point.hpp"
 
 
-struct Point {
-
-    std::string code;
-    std::map<std::string, double> outlets;
-    double dollars;
-    double x{0}, y{0};
-    double cluster = 0;
-
-    void addOutlet(std::string name_, double dollars_) {
-        if ( outlets.find(name_) == outlets.end() ) {
-            outlets.insert({name_, dollars_});
-        } 
-        outlets.at(name_) += dollars_;
-        dollars += dollars_;
-    };
-
-};
+#ifndef pointgroup_H
+#define pointgroup_H
 
 
 class PointGroup {
@@ -60,21 +43,27 @@ class PointGroup {
                 for (auto const& x : point.outlets) {
                     if ( outletTotalsMap.find(x.first) == outletTotalsMap.end() ) {
                         outletTotalsMap.insert({x.first, x.second});
+                    } else {
+                        outletTotalsMap.at(x.first) += x.second;
                     }
-                    outletTotalsMap.at(x.first) += x.second;
+                    
                 }
             }
 
             // compute the share within each outlet
-            max_share = 0.0;
             num_retailers = 0;
+            max_share = 0.0;
+            double share;
+
             for (auto const& x : outletTotalsMap) {
-                double outletShare = x.second/dollars;
-                if(outletShare>max_share) {
-                    max_share = outletShare;
-                };
+                share = x.second/dollars;
+
+                if(share>max_share) {
+                    max_share = share;
+                }
                 num_retailers += 1;
             }
+
 
             return max_share<.75 && num_retailers>3 ? true: false;
         };
@@ -88,15 +77,10 @@ class PointGroup {
                 point.x = x_;
                 point.y = y_;
                 point.code = code_;
-                point.addOutlet(outlet_, dollars_);
                 points.insert({code_, point});
             }
 
-            // an existing point?
-            else {
-
-                points.at(code_).addOutlet(outlet_, dollars_);
-            }
+            points.at(code_).addOutlet(outlet_, dollars_);
 
         }
 
@@ -119,7 +103,7 @@ class PointGroup {
             std::vector<size_t> assignments(data.size());
             for (size_t iteration = 0; iteration < number_of_iterations; ++iteration) {
                 for (size_t point = 0; point < data.size(); ++point) {
-                double best_distance = std::numeric_limits<double>::max();
+                    double best_distance = std::numeric_limits<double>::max();
                     size_t best_cluster = 0;
                     for (size_t cluster = 0; cluster < k; ++cluster) {
                         const double distance = squared_l2_distance(data[point], means[cluster]);
@@ -131,7 +115,27 @@ class PointGroup {
                     assignments[point] = best_cluster;
                     newPoints[point].cluster = best_cluster;
                 }
+
+                // Sum up and count points for each cluster.
+                std::vector<Point> new_means(k);
+                std::vector<size_t> counts(k, 0);
+                for (size_t point = 0; point < data.size(); ++point) {
+                    const auto cluster = assignments[point];
+                    new_means[cluster].x += data[point].x;
+                    new_means[cluster].y += data[point].y;
+                    counts[cluster] += 1;
+                }
+
+                // Divide sums by counts to get new centroids.
+                for (size_t cluster = 0; cluster < k; ++cluster) {
+                    // Turn 0/0 into 0/1 to avoid zero division.
+                    const auto count = std::max<size_t>(1, counts[cluster]);
+                    means[cluster].x = new_means[cluster].x / count;
+                    means[cluster].y = new_means[cluster].y / count;
+                }
             };
+
+            
 
             return newPoints;
         }
@@ -144,7 +148,7 @@ class PointGroup {
             if(pointsVec.size()>1) {
                 // create a new group with the clustered points
                 std::vector<Point> newPoints;
-                newPoints = cluster(pointsVec, 2, 5);
+                newPoints = cluster(pointsVec, 2, 25);
 
                 // objects for each of the split groups
                 std::vector<Point> points0;
@@ -164,6 +168,7 @@ class PointGroup {
                 if(isReleasable(points0) && isReleasable(points1)) {
                     results.push_back(points0);
                     results.push_back(points1);
+                    
                 }
                 else {
                     results.push_back(pointsVec);

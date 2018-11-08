@@ -12,7 +12,13 @@
 #include <string>
 #include <map>
 #include <cstdlib>
+
+#include <boost/random.hpp>
+#include <boost/random/normal_distribution.hpp>
+
+
 #include "./pointgroup/pointgroup.hpp"
+#include "./point/point.hpp"
 
 
 std::vector<std::string> line_split(const std::string& s, char delimiter){
@@ -61,15 +67,12 @@ std::map<std::string, PointGroup> initGroups(std::string datapath_) {
 
     };
 
-
     return groups;
+
 };
 
 
-int main(int argc, char **argv ) {
-
-    std::string dataFile=argv[1];
-    std::string outputFile=argv[2];
+void microgeo_report(std::string dataFile, std::string outputFile) {
 
     std::map<std::string, PointGroup> groupMap = initGroups(dataFile);
 
@@ -78,15 +81,59 @@ int main(int argc, char **argv ) {
     myfile << "zip,microgeo,dma\n";
 
     int groupNum = 0;
+
     for (auto const& x : groupMap) {   
         std::vector<std::vector<Point>> pointGroups = groupMap.at(x.first).optimize();
         for (auto group : pointGroups) {
             for (auto point : group) {
+
+                double outletDollars = 0.0;
+                for (auto const& z : point.outlets) {
+                    outletDollars += z.second;
+                }
+
                 myfile << point.code << ", "<<groupNum << "," << x.first <<"\n";
             }
             groupNum += 1;
         }
     };
 
+}
+
+
+void integrationTest(std::string dataFile, std::string outputFile) {
+
+    std::cout<<"Running Tests"<<std::endl;
+}
+
+
+
+
+int main(int argc, char **argv ) {
+
+    size_t num_args;
+
+    for (int i = 1; i < argc; ++i)
+    {
+        num_args += 1;
+    } 
+
+    if(num_args==2) {
+        std::string dataFile=argv[1];
+        std::string outputFile=argv[2];
+        microgeo_report(dataFile, outputFile);
+    }
+
+    else if(num_args==3) {
+        
+    }
+
+    else {
+        std::cout<<"Invalid Parameters"<<std::endl;
+    }
+
+    
 
 }
+
+

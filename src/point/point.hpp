@@ -19,9 +19,12 @@ class Point {
         void addOutlet(std::string name_, double dollars_) {
             if ( outlets.find(name_) == outlets.end() ) {
                 outlets.insert({name_, dollars_});
-            } 
-            outlets.at(name_) += dollars_;
+            } else {
+                outlets.at(name_) += dollars_;
+            }
+
             dollars += dollars_;
+        
         };
 
 };
