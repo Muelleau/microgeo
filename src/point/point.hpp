@@ -22,9 +22,7 @@ class Point {
             } else {
                 outlets.at(name_) += dollars_;
             }
-
             dollars += dollars_;
-        
         };
 
 };

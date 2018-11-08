@@ -13,10 +13,6 @@
 #include <map>
 #include <cstdlib>
 
-#include <boost/random.hpp>
-#include <boost/random/normal_distribution.hpp>
-
-
 #include "./pointgroup/pointgroup.hpp"
 #include "./point/point.hpp"
 
@@ -107,14 +103,11 @@ void integrationTest(std::string dataFile, std::string outputFile) {
 }
 
 
-
-
 int main(int argc, char **argv ) {
 
     size_t num_args;
 
-    for (int i = 1; i < argc; ++i)
-    {
+    for (int i = 1; i < argc; ++i) {
         num_args += 1;
     } 
 
@@ -132,8 +125,7 @@ int main(int argc, char **argv ) {
         std::cout<<"Invalid Parameters"<<std::endl;
     }
 
-    
-
 }
+
 
 
